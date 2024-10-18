@@ -1,6 +1,7 @@
 # RDP Docker Image
 
 This image offers a minimal toolset for running GUI applications within an isolated X11 environment.
+The image is intended to be used on the machines with the NVIDIA GPU.
 
 ## Features
 
