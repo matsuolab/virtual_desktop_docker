@@ -1,0 +1,33 @@
+volumes:
+  x11unix:
+
+services:
+  rdp:
+    image: rdp:latest
+    build:
+      context: docker
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - LOCAL_UID
+      - VNC_PORT
+      - WEB_PORT
+      - DISPLAY=:10
+      - ACCEPT_EULA=y
+      - PRIVACY_CONSENT=y
+    ports:
+      - ${VNC_PORT}:5900
+      - ${WEB_PORT}:6080
+    volumes: 
+      - "x11unix:/tmp/.X11-unix:rw"
+      # NOTE: to use host OS configuration comment the above line and uncomment the line below
+      #- "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    security_opt:
+      - seccomp:unconfined
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
