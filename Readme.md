@@ -19,15 +19,22 @@ There are two primary scenarios: sharing `.X11-unix` with the host OS or using a
 
 However, if you choose to share the directory with the host OS, you'll benefit from being able to run UI applications from the desktop within the virtual environment.
 
-Once the `rdp` Docker container is running, you can access it at [http://localhost:6080](http://localhost:6080).
+### Steps to Run the Environment
 
-If you're using SSH, you can set up local port forwarding with:
+1. Start the desktop container with docker compose up -d desktop.
+2. Check the NoVNC port using docker compose port desktop 6080 (this will output 0.0.0.0:<port>).
+4. Access it at http://localhost:<port> on your host machine.
+5. If you're using SSH, set up local port forwarding and access with http://localhost:6080.
+
+### Setting Up SSH Port Forwarding
+
+To start a new connection, use the following command:
 
 ```bash
-ssh -L 6080:localhost:6080 user@host
+ssh -L 6080:localhost:<port> user@host
 ```
 
-**Additional Note:** If you want to use a custom port and aren’t sure what it is, follow these steps:
+If you prefer to change the port on the fly within a single SSH connection, you can do this:
 
 ```bash
 ssh -o "EnableEscapeCommandline yes" user@host
