@@ -22,8 +22,8 @@ However, if you choose to share the directory with the host OS, you'll benefit f
 ### Steps to Run the Environment
 
 1. Start the desktop container with docker compose up -d desktop.
-2. Check the NoVNC port using docker compose port desktop 6080 (this will output 0.0.0.0:<port>).
-4. Access it at http://localhost:<port> on your host machine.
+2. Check the NoVNC port using docker compose port desktop 6080 (this will produce output similar to `0.0.0.0:<port>`).
+4. Access it at `http://localhost:<port>` on your host machine.
 5. If you're using SSH, set up local port forwarding and access with http://localhost:6080.
 
 ### Setting Up SSH Port Forwarding
