@@ -19,6 +19,8 @@ There are two primary scenarios: sharing `.X11-unix` with the host OS or using a
 
 However, if you choose to share the directory with the host OS, you'll benefit from being able to run UI applications from the desktop within the virtual environment.
 
+By default NoVNC uses port number `6080`, however it can be modified either inside the `docker-compose.yaml` or afterwards with ssh port forwarding.
+
 ### Steps to Run the Environment
 
 1. Start the desktop container with docker compose up -d desktop.
@@ -43,7 +45,7 @@ ssh -o "EnableEscapeCommandline yes" user@host
 #  Press <return>
 #  Type "~C" (tilde + shift + c)
 #  The "ssh>" prompt will appear
-#  Enter "-L <port>:localhost:<port>" and press enter
+#  Enter "-L 6080:localhost:<port>" and press enter
 #
 #  You can then access the application via http://localhost:<port>
 ```
