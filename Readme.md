@@ -19,21 +19,25 @@ There are two primary scenarios: sharing `.X11-unix` with the host OS or using a
 
 However, if you choose to share the directory with the host OS, you'll benefit from being able to run UI applications from the desktop within the virtual environment.
 
+Additionally, running OpenGL applications currently supported **only** in host OS sharing scenario.
+
 By default NoVNC uses port number `6080`, however it can be modified either inside the `docker-compose.yaml` or afterwards with ssh port forwarding.
+
+Before using apps with OpenGL, ensure that VirtualGL is installed. Take a look at the available [packages](https://github.com/VirtualGL/virtualgl/releases)
 
 ### Steps to Run the Environment
 
-1. Start the desktop container with docker compose up -d desktop.
-2. Check the NoVNC port using docker compose port desktop 6080 (this will produce output similar to `0.0.0.0:<port>`).
-4. Access it at `http://localhost:<port>` on your host machine.
-5. If you're using SSH, set up local port forwarding and access with http://localhost:6080.
+0. Copy .env.sample to .env file and modify `DISPLAY` and `WEB_PORT` to free X display and free TCP port.
+1. Start the desktop container with `docker compose up -d desktop`.
+2. Access it at `http://localhost:<WEB_PORT>` on your host machine.
+3. If you're using SSH, set up local port forwarding and access with http://localhost:6080.
 
 ### Setting Up SSH Port Forwarding
 
 To start a new connection, use the following command:
 
 ```bash
-ssh -L 6080:localhost:<port> user@host
+ssh -L 6080:localhost:<WEB_PORT> user@host
 ```
 
 If you prefer to change the port on the fly within a single SSH connection, you can do this:
@@ -50,14 +54,70 @@ ssh -o "EnableEscapeCommandline yes" user@host
 #  You can then access the application via http://localhost:<port>
 ```
 
-### Use cases
 
-#### [Docker] run from the same docker-compose.yaml
+### Embedding in the docker-compose.yaml example 
 
-#### [Docker] run from different docker-compose.yaml
+Add the following piece of code to your docker-compose file
 
-#### [Docker] run with docker command
+```yaml
+  desktop:
+    image: ghcr.io/matsuolab/virtual_desktop:latest
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+    ports:
+      - "${WEB_PORT}:6080"
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  <your_service>:
+    depends_on:
+      - desktop
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+```
 
-#### [Host OS] run simple application
+### Connecting other services with docker-compose
+Modify your docker-compose or .env file if needed.
 
-#### [Host OS] run other gnome application (firefox, etc)
+```yaml
+  <your_service>:
+    depends_on:
+      - desktop
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+```
+
+Don't forget to install VirtualGL if needed and execute your app with `vglrun` prefix (e.g. `vglrun application`).
+
+### Run with docker command
+
+```bash
+docker run ... -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=... image
+```
+
+### Run simple application from host OS
+
+Define the DISPLAY to match the one of virtual display.
+
+```bash
+DISPLAY=... vglrun glxgears
+```
