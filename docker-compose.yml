@@ -4,25 +4,22 @@ volumes:
 services:
   desktop:
     image: ghcr.io/matsuolab/virtual_desktop:latest
+    runtime: nvidia
     build:
       context: docker
     environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
       # NOTE: uncomment if you want to use multiple containers in the host mode
-      #- DISPLAY=:10
+      - DISPLAY
     ports:
       # NOTE: uncomment if you want to use VNC client instead of NoVNC
-      #- 5900
-      - 6080
-      # NOTE: port can be fixed:
-      #- 5901:5900
-      #- 6080:6080
+      #- 5900:5900
+      - "${WEB_PORT}:6080"
     volumes: 
-      - "x11unix:/tmp/.X11-unix:rw"
-      # NOTE: to use host OS configuration comment the above line and uncomment the line below
-      #- "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
     security_opt:
       - seccomp:unconfined
-
     deploy:
       resources:
         reservations:
