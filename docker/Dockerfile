@@ -1,15 +1,17 @@
-FROM nvcr.io/nvidia/cuda:12.6.2-base-ubuntu22.04
+ARG UBUNTU_DISTR
+FROM ubuntu:22.04
 
 ARG UID=1000
 ARG GID=1000
 ARG GROUPNAME=ubuntu
 ARG USERNAME=ubuntu
+ARG NOVNC_VERSION=1.5.0
 
-ENV DISPLAY=:10
 ENV MESA_GL_VERSION_OVERRIDE=4.6
 ENV PRIVACY_CONSENT=Y
 ENV ACCEPT_EULA=Y
 ENV NVIDIA_DRIVER_CAPABILITIES=all
+ENV LANG en_US.utf8
 
 
 ENV UID=${UID}
@@ -19,14 +21,14 @@ ENV USERNAME=${USERNAME}
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-    openbox supervisor gosu \
+    openbox supervisor gosu locales \
     tigervnc-standalone-server \
-    lxterminal xdg-utils htop mesa-utils websockify git curl jq && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/debconf/* /var/log/* /tmp/* /var/tmp/*
+    websockify curl jq && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/debconf/* /var/log/* /tmp/* /var/tmp/* && \
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
-RUN git clone https://github.com/novnc/noVNC.git /opt/novnc && \
-    cd /opt/novnc && \
-    git checkout v1.5.0 && \
+RUN cd /opt && curl -Lk https://github.com/novnc/noVNC/archive/refs/tags/v{NOVNC_VERSION}.tar.gz | tar xz && \
+    rm v${NOVNC_VERSION}.tar.gz && mv noVNC-${NOVNC_VERSION} novnc && \
     cp /opt/novnc/vnc.html /opt/novnc/index.html
 
 RUN cd /tmp && VIRTUALGL_VERSION="$(curl -fsSL "https://api.github.com/repos/VirtualGL/virtualgl/releases/latest" | jq -r '.tag_name' | sed 's/[^0-9\.\-]*//g')" && \
