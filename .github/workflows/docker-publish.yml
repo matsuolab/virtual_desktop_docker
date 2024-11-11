@@ -1,0 +1,34 @@
+name: Docker
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: './Store'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        # with:
+        #   ref: ${{ steps.get_tag_name.outputs.VERSION }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: "./docker"
+          #"{{defaultContext}}"
+          file: "./docker/Dockerfile"
+          push: true
+          tags: ghcr.io/matsuolab/virtual_desktop:latest,ghcr.io/matsuolab/virtual_desktop:${{ github.ref_name }}
