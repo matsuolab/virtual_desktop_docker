@@ -67,6 +67,7 @@ elif [[ $COMMAND == "connect" ]]; then
 
   echo "Open http://localhost:$LOCAL_PORT in browser"
   REMOTE_PORT=$(ssh $HOST "docker port $NAME | head -n 1 | awk -F: '{print \$NF}'")
+  REMOTE_DISPLAY=$(($REMOTE_PORT - $BASE_PORT))
   ssh -t -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
 
 
