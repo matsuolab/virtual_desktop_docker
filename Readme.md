@@ -10,6 +10,25 @@ Out of the box, it includes:
 * A lightweight desktop environment (openbox)
 * VNC server (TigerVNC)
 * NoVNC proxy server
+* VirtualGL client
+
+## Quick Start
+
+Execute the following command:
+
+```
+curl -sSf https://raw.githubusercontent.com/matsuolab/virtual_desktop_docker/refs/heads/master/install.sh | bash
+```
+
+After the command executed you should be able to execute `rdp-ssh` tool to control remote desktop sessions.
+
+1. To start session run `rdp-ssh -n desktop-session-name -a user@host start`.
+2. To stop session run `rdp-ssh -n desktop-session-name -a user@host stop`.
+3. To connect to available session run `rdp-ssh -n desktop-session-name -a user@host connect`.
+4. To list all available sessions run `rdp-ssh -a user@host list`.
+
+For further information refer to the `rdp-ssh` [documentation](#rdp-ssh-tool).
+
 
 ## How to Use
 
@@ -121,3 +140,7 @@ Define the DISPLAY to match the one of virtual display.
 ```bash
 DISPLAY=... vglrun glxgears
 ```
+
+### RDP SSH Tool
+
+TODO: documentation
