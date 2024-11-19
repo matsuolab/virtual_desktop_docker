@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+COMMAND=${@: -1}
+
+
+RUNNING=false
+BASE_PORT=6090
+LOCAL_PORT=6090
+
+while getopts ":n:p:a:" opt; do
+    case "${opt}" in
+        n ) #recover r_file
+           NAME="$OPTARG"
+           echo $NAME
+           ;;
+        a ) #recover r_file
+           HOST="$OPTARG"
+           echo $HOST
+           ;;
+        p ) #recover r_file
+           LOCAL_PORT="$OPTARG"
+           ;;
+    esac
+done
+DESKTOP_REMOTES=$(ssh $HOST "docker ps --filter ancestor=ghcr.io/matsuolab/virtual_desktop --format '{{.Names}}'")
+
+echo $NAME $COMMAND
+if [ ! -z "${NAME}" ] && [[ ! $(echo ${DESKTOP_REMOTES[@]}  | tr ' ' '\n' | awk '$1 == "'"$NAME"'"{print $0}' | wc -l) -eq 0 ]]; then
+  RUNNING=true
+fi
+
+
+if [[ $COMMAND == "list" ]]; then
+  echo $DESKTOP_REMOTES
+  exit 0
+
+elif [[ $COMMAND == "start" ]]; then
+  echo "Starting..."
+  if $RUNNING; then
+    echo "Already running! Connecting..."
+    REMOTE_PORT=$(ssh $HOST "docker port $NAME | head -n 1 | awk -F: '{print \$NF}'")
+
+    REMOTE_DISPLAY=$(($REMOTE_PORT - $BASE_PORT))
+  else
+    LAST_DISPLAY=$(ssh $HOST ls /tmp/.X11-unix/ | sort -V | tail -n 1 | cut -c 2-)
+    REMOTE_DISPLAY=$(($LAST_DISPLAY + 1))
+    REMOTE_PORT=$(($BASE_PORT + $REMOTE_DISPLAY))
+    NAME=${NAME:=desktop-$REMOTE_DISPLAY}
+
+    echo $LAST_DISPLAY  $REMOTE_DISPLAY
+    echo "Will create new display :$REMOTE_DISPLAY. To use on the remote, execute the following:"
+    echo "export DISPLAY=:$REMOTE_DISPLAY"
+
+    ssh $HOST docker run --rm -d -p $REMOTE_PORT:6080 -e DISPLAY=:$REMOTE_DISPLAY --name $NAME -v /tmp/.X11-unix:/tmp/.X11-unix ghcr.io/matsuolab/virtual_desktop:latest 
+  fi
+  
+
+  echo "Started \"$NAME\"!"
+  echo "Open http://localhost:$LOCAL_PORT in browser"
+  ssh -t -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
+
+elif [[ $COMMAND == "connect" ]]; then
+  if ! $RUNNING ; then
+    echo "Not running"
+    exit 1
+  fi
+
+  echo "Open http://localhost:$LOCAL_PORT in browser"
+  REMOTE_PORT=$(ssh $HOST "docker port $NAME | head -n 1 | awk -F: '{print \$NF}'")
+  ssh -t -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
+
+
+elif [[ $COMMAND == "stop" ]]; then
+  if ! $RUNNING ; then
+    echo "Not running"
+    exit 1
+  fi
+
+  echo "Stopping..."
+  REMOTE_PORT=$(ssh $HOST "docker port $NAME | head -n 1 | awk -F: '{print \$NF}'")
+
+  REMOTE_DISPLAY=$(($REMOTE_PORT - $BASE_PORT))
+  ssh $HOST "docker stop -t 0 $NAME; rm /tmp/.X11-unix/X$REMOTE_DISPLAY"
+  echo "Stopped"
+else
+  echo help
+fi
+
+
