@@ -16,7 +16,7 @@ Out of the box, it includes:
 
 Execute the following command:
 
-```
+```bash
 curl -sSf https://raw.githubusercontent.com/matsuolab/virtual_desktop_docker/refs/heads/master/install.sh | bash
 ```
 
@@ -26,6 +26,13 @@ After the command executed you should be able to execute `rdp-ssh` tool to contr
 2. To stop session run `rdp-ssh -n desktop-session-name -a user@host stop`.
 3. To connect to available session run `rdp-ssh -n desktop-session-name -a user@host connect`.
 4. To list all available sessions run `rdp-ssh -a user@host list`.
+
+After starting or connecting the command will be running shell on the **remote** and also will have `DISPLAY` environment
+variable set to virtual display socket. You can directly run applications and/or docker images with passing the `DISPLAY` variable along.
+
+```bash
+docker run ... -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY image
+```
 
 For further information refer to the `rdp-ssh` [documentation](#rdp-ssh-tool).
 
