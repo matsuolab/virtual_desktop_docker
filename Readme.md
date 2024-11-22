@@ -1,6 +1,6 @@
 # RDP Docker Image
 
-This image offers a minimal toolset for running GUI applications within an isolated X11 environment.
+This image offers a minimal toolset for running GUI applications within an isolated X11 environment and allowing remote access.
 The image is intended to be used on the machines with the NVIDIA GPU.
 
 ## Features
@@ -14,27 +14,45 @@ Out of the box, it includes:
 
 ## Quick Start
 
-Execute the following command:
+**IMPORTANT NOTICE: Breaking Changes Ahead**
+
+To set up the required helper tool on your **local machine**, execute the following command:
 
 ```bash
 curl -sSf https://raw.githubusercontent.com/matsuolab/virtual_desktop_docker/refs/heads/master/install.sh | bash
 ```
 
-After the command executed you should be able to execute `rdp-ssh` tool to control remote desktop sessions.
+Once installed, you can use the `rdp-ssh` tool on your **local machine** to manage remote desktop sessions. 
+This tool can replace `ssh` for starting, connecting, stopping sessions, or entering a remote SSH session with a configured environment.
 
-1. To start session run `rdp-ssh -n desktop-session-name -a user@host start`.
-2. To stop session run `rdp-ssh -n desktop-session-name -a user@host stop`.
-3. To connect to available session run `rdp-ssh -n desktop-session-name -a user@host connect`.
-4. To list all available sessions run `rdp-ssh -a user@host list`.
+1. **Start a session:**  
+   ```bash
+   rdp-ssh -n desktop-session-name -a user@host start
+   ```
 
-After starting or connecting the command will be running shell on the **remote** and also will have `DISPLAY` environment
-variable set to virtual display socket. You can directly run applications and/or docker images with passing the `DISPLAY` variable along.
+2. **Stop a session:**  
+   ```bash
+   rdp-ssh -n desktop-session-name -a user@host stop
+   ```
+
+3. **Connect to a session:**  
+   ```bash
+   rdp-ssh -n desktop-session-name -a user@host connect
+   ```
+
+4. **List all sessions:**  
+   ```bash
+   rdp-ssh -a user@host list
+   ```
+
+After starting or connecting, the command will run a shell on the **remote** machine with the `DISPLAY` environment variable set to the virtual display.
+You can then run applications or Docker containers using the `DISPLAY` variable. Example:
 
 ```bash
 docker run ... -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY image
 ```
 
-For further information refer to the `rdp-ssh` [documentation](#rdp-ssh-tool).
+For detailed information, check the `rdp-ssh` [documentation](#rdp-ssh-tool).
 
 
 ## How to Use
