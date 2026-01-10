@@ -44,7 +44,17 @@ elif [[ $COMMAND == "start" ]]; then
   else
     LAST_DISPLAY=$(ssh $HOST ls /tmp/.X11-unix/ | sort -V | tail -n 1 | cut -c 2-)
     REMOTE_DISPLAY=$(($LAST_DISPLAY + 1))
+
+    # Find an available port by checking both X11 sockets and Docker port usage
     REMOTE_PORT=$(($BASE_PORT + $REMOTE_DISPLAY))
+    USED_PORTS=$(ssh $HOST "docker ps --format '{{.Ports}}' | grep -oP '0\.0\.0\.0:\K[0-9]+' | sort -n")
+
+    # Keep incrementing until we find a free port
+    while echo "$USED_PORTS" | grep -q "^$REMOTE_PORT$"; do
+      REMOTE_DISPLAY=$(($REMOTE_DISPLAY + 1))
+      REMOTE_PORT=$(($BASE_PORT + $REMOTE_DISPLAY))
+    done
+
     NAME=${NAME:=desktop-$REMOTE_DISPLAY}
 
     echo $LAST_DISPLAY  $REMOTE_DISPLAY
@@ -57,7 +67,7 @@ elif [[ $COMMAND == "start" ]]; then
 
   echo "Started \"$NAME\"!"
   echo "Open http://localhost:$LOCAL_PORT in browser"
-  ssh -t -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
+  ssh -t -o ExitOnForwardFailure=no -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
 
 elif [[ $COMMAND == "connect" ]]; then
   if ! $RUNNING ; then
@@ -68,7 +78,7 @@ elif [[ $COMMAND == "connect" ]]; then
   echo "Open http://localhost:$LOCAL_PORT in browser"
   REMOTE_PORT=$(ssh $HOST "docker port $NAME | head -n 1 | awk -F: '{print \$NF}'")
   REMOTE_DISPLAY=$(($REMOTE_PORT - $BASE_PORT))
-  ssh -t -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
+  ssh -t -o ExitOnForwardFailure=no -L $LOCAL_PORT:localhost:$REMOTE_PORT $HOST DISPLAY=:$REMOTE_DISPLAY bash -l
 
 
 elif [[ $COMMAND == "stop" ]]; then
